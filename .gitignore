@@ -1,4 +1,4 @@
-*.json
+private.json
 *.py[cod]
 *.swp
 *~
