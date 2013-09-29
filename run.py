@@ -1,9 +1,10 @@
-#/usr/bin/env python
+#!/usr/bin/env python
 
 import sys
 import getopt
 import glob
 import json
+from vpynup import VpynUp
 
 # debug
 from pprint import pprint
@@ -24,16 +25,16 @@ def main(argv):
         usage()
     with open(config_file) as json_file:
         json_obj = json.load(json_file)
-    pprint(json_obj)
 
-    vpnup = vpnup(config=json_obj)
-    vpnup.instance.create()
-    vpnup.instance.start()
-    vpnup.instance.install("puppet")
-    vpnup.instance.provider.configure()
-    vpnup.instance.get_openvpn_certs()
-
-    print vpnup.instance.settings()
+    vpnup = VpynUp(json_obj)
+    vpnup.start()
+#    vpnup.instance.create()
+#    vpnup.instance.start()
+#    vpnup.instance.install("puppet")
+#    vpnup.instance.provider.configure()
+#    vpnup.instance.get_openvpn_certs()
+#
+#    print vpnup.instance.settings()
 
 
 def handle_args(argv):
