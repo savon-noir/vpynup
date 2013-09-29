@@ -2,7 +2,7 @@ import sys
 from boto import ec2, exception
 from vpynup.provider import Provider
 
-class VpynUp(object):
+class VpnBootstrap(object):
 
 
     def __init__(self, json_config=None):

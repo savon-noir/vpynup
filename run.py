@@ -4,7 +4,7 @@ import sys
 import getopt
 import glob
 import json
-from vpynup import VpynUp
+from vpynup.vpnbootstrap import VpnBootstrap
 
 # debug
 from pprint import pprint
@@ -26,7 +26,7 @@ def main(argv):
     with open(config_file) as json_file:
         json_obj = json.load(json_file)
 
-    vpnup = VpynUp(json_obj)
+    vpnup = VpnBootstrap(json_obj)
     vpnup.start()
 #    vpnup.instance.create()
 #    vpnup.instance.start()

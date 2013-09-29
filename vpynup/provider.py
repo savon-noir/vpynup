@@ -13,6 +13,7 @@ class Provider(object):
     def provision(self, image_id='ami-c30360aa'):
         try:
             self.image = self.connection.get_image(image_id)
+            print self.image.name
         except exception.EC2ResponseError as e:
             sys.stderr.write("get image failed: {0} ({1})\n".format(e.message, e.code))
             sys.exit(e.code)
