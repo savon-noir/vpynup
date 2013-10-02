@@ -18,4 +18,4 @@ class VpnBootstrap(object):
         self.provider.provision()
 
     def stop(self):
-        pass
+        self.provider.unprovision()

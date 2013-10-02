@@ -9,6 +9,7 @@ class Provider(object):
         self.connection = None
         self.image = None
         self.key_name = None
+        self.instance_id = None
 
         try:
             if 'auth' in kwargs:
@@ -42,22 +43,43 @@ class Provider(object):
 
         return _cloud_img
 
-    def __get_keypair(self, keypair):
+    def __get_keypair(self, key_name):
         _key_pair = None
-        _key_pair = self.connection.get_key_pair(keypair)
+        _key_pair = self.connection.get_key_pair(key_name)
 
         return _key_pair
 
+    def get_instance(self, instance_id):
+        _instance = None
+        _reservations = self.connection.get_all_instances(instance_ids=[instance_id])
+        if _reservations is not None and len(_reservations[0].instances):
+            _instance = _reservations[0].instances.pop()
+        return _instance
+
+    def get_instance_status(self, instance_id):
+        _instance = self.get_instance(instance_id)
+        return _instance.state if _instance is not None else None
+
     def provision(self):
-        print self.connection
-        print self.image
-        print self.key_name
+        _reservation = None
         if(self.connection is not None and
            self.image is not None and
            self.key_name is not None):
-            self.connection.run_instances(image_id=self.image.id,
-                                          key_name=self.key_name.name,
-                                          instance_type='t1.micro')
+            _reservations = self.connection.run_instances(image_id=self.image.id,
+                                                          key_name=self.key_name.name,
+                                                          instance_type='t1.micro')
+        if(_reservations and (len(_reservations.instances) == 1)):
+            self.instance_id = _reservations.instances.pop().id
         else:
             sys.stderr.write("Some parameters are not correctly set, "
-                             "please check your json config file")
+                             "please check your json config file or "
+                             "instance could not be started")
+        return _reservation
+
+    def unprovision(self):
+        if(self.get_instance(self.instance_id) is not None):
+            _reservations =self.connection.terminate_instances(instance_ids=[self.instance_id])
+        else:
+            sys.stderr.write("Instance for VPN does not exists. "
+                             "Please manually check if it is still running")
+        return _reservations
