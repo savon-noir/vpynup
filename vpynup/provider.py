@@ -7,32 +7,34 @@ class Provider(object):
 
     def __init__(self, **kwargs):
         self.connection = None
-        self.image = None
+        self.image_id = None
         self.key_name = None
         self.instance_id = None
+        self.instance = None
 
         try:
             if 'auth' in kwargs:
                 self.connection = cloudapi.connection.EC2Connection(**kwargs['auth'])
+            elif 'aws_access_key_id' in kwargs and 'aws_secret_access_key':
+                self.connection = cloudapi.connection.EC2Connection(**kwargs)
             else:
-                print "raise exception"
+                raise Exception("Failed to connect to cloud provider: check credentials")
         except:
             raise
 
         if('instance' in kwargs and 'image_id' in kwargs):
-            image_id = kwargs['instance']['image_id']
-            self.image = self.__get_image(image_id)
+            self.image_id = kwargs['instance']['image_id']
         else:
-            self.image = self.__get_image()
+            self.image_id = 'ami-c30360aa'
 
         if('instance' in kwargs and 'key_name' in kwargs['instance']):
             keypair_name = kwargs['instance']['key_name']
-            self.key_name = self.__get_keypair(keypair_name)
+            self.key_name = self.get_keypair(keypair_name)
         else:
-            sys.stderr.write("Key pair auto creation not supported: please "
-                             "provide an existing key pair name in json file")
+            raise Exception("Key pair auto creation not supported: please "
+                            "provide an existing key pair name in json file")
 
-    def __get_image(self, image_id='ami-c30360aa'):
+    def get_image(self, image_id):
         _cloud_img = None
         try:
             _cloud_img = self.connection.get_image(image_id)
@@ -43,7 +45,7 @@ class Provider(object):
 
         return _cloud_img
 
-    def __get_keypair(self, key_name):
+    def get_keypair(self, key_name):
         _key_pair = None
         _key_pair = self.connection.get_key_pair(key_name)
 
@@ -56,25 +58,29 @@ class Provider(object):
             _instance = _reservations[0].instances.pop()
         return _instance
 
+    def get_hostname(self):
+        return self.instance.public_dns_name if self.instance is not None else ''
+
     def get_instance_status(self, instance_id):
         _instance = self.get_instance(instance_id)
         return _instance.state if _instance is not None else None
 
     def provision(self):
-        _reservation = None
+        _reservations = None
         if(self.connection is not None and
-           self.image is not None and
-           self.key_name is not None):
-            _reservations = self.connection.run_instances(image_id=self.image.id,
+            self.image_id is not None and
+            self.key_name is not None):
+            _reservations = self.connection.run_instances(image_id=self.image_id,
                                                           key_name=self.key_name.name,
                                                           instance_type='t1.micro')
         if(_reservations and (len(_reservations.instances) == 1)):
-            self.instance_id = _reservations.instances.pop().id
+            self.instance = _reservations.instances.pop()
+            self.instance_id = self.instance.id
         else:
             sys.stderr.write("Some parameters are not correctly set, "
                              "please check your json config file or "
                              "instance could not be started")
-        return _reservation
+        return _reservations
 
     def unprovision(self):
         if(self.get_instance(self.instance_id) is not None):
