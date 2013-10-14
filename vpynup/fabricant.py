@@ -15,6 +15,7 @@ class Fabricant(Task):
             self.key_filename = key_filename
 
         env.hosts = [ self.host ]
+        env.user = 'ubuntu'
         env.key_filename = [ self.key_filename ]
 
     def get_distro(self):
@@ -44,16 +45,16 @@ class Fabricant(Task):
             put(source_dir, _dpath)
         return _dpath
 
-    def stage_puppet(puppet_dir, manifest_file="init.pp", print_output=True):
+    def stage_puppet(self, puppet_dir, manifest_file="init.pp", print_output=True):
         _distro = self.get_distro()
         if _distro == "Debian":
-            sudo("apt-get update")
-            sudo("apt-get install puppet")
-            sudo("puppet apply --modulepah={0}/modules/ {0}/manifests/{1}".format(puppet_dir, manifest_file))
+            sudo("apt-get -y update")
+            sudo("apt-get -y install puppet")
+            sudo("puppet apply --modulepath={0}/puppet/modules/ {0}/puppet/manifests/{1}".format(puppet_dir, manifest_file))
         elif print_output:
             sys.stderr.write("Distro {0} is not yet supported".format(_distro))
         
-    def remote_config_get(remote_file, local_file, print_output):
+    def remote_config_get(self, remote_file, local_file, print_output=True):
         _rsize = 0
         _fpath = None
         _rout = sudo("mktemp XXXXXXXX.tgz")
@@ -72,7 +73,7 @@ class Fabricant(Task):
     def run(self):
         _mods_dir = "/vagrant/puppet/"
         _puppet_conf_dir = self.remote_dir_copy(_mods_dir)
-        if _puppet_conf is not None:
+        if _puppet_conf_dir is not None:
             self.stage_puppet(_puppet_conf_dir)
             r = self.remote_config_get("/etc/openvpn/ovpn/download-configs/clientlol.tgz", "/tmp/clientlol.tgz")
         else:

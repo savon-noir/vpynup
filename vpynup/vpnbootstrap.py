@@ -21,11 +21,12 @@ class VpnBootstrap(object):
             sys.exit(400)
 
     def start(self):
-        prov = self.provider.provision()
+  #      prov = self.provider.provision()
+        hostname = "ec2-107-21-155-136.compute-1.amazonaws.com"
         print(self.provider.get_hostname())
         print(self.key_filename)
-        self.fabricant = Fabricant(host=self.provider.get_hostname(), key_filename=self.key_filename)
-        fabric_run(self.fabricant())
+        self.fabricant = Fabricant(host=hostname, key_filename=self.key_filename)
+        fabric_run(self.fabricant)
 
     def stop(self):
         self.provider.unprovision()
