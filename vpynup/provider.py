@@ -10,7 +10,7 @@ class Provider(object):
         self.image_id = None
         self.key_name = None
         self.instance_id = None
-        self.instance = None
+        self._instance = None
 
         try:
             if 'auth' in kwargs:
@@ -34,6 +34,12 @@ class Provider(object):
             raise Exception("Key pair auto creation not supported: please "
                             "provide an existing key pair name in json file")
 
+    @property
+    def instance(self):
+        if self._instance is not None:
+            self._instance.update()
+        return self._instance
+
     def get_image(self, image_id):
         _cloud_img = None
         try:
@@ -42,7 +48,6 @@ class Provider(object):
             e_msg = "get image failed: {0} ({1})\n".format(e.message, e.code)
             sys.stderr.write(e_msg)
             sys.exit(e.code)
-
         return _cloud_img
 
     def get_keypair(self, key_name):
@@ -51,19 +56,11 @@ class Provider(object):
 
         return _key_pair
 
-    def get_instance(self, instance_id):
-        _instance = None
-        _reservations = self.connection.get_all_instances(instance_ids=[instance_id])
-        if _reservations is not None and len(_reservations[0].instances):
-            _instance = _reservations[0].instances.pop()
-        return _instance
-
     def get_hostname(self):
-        return self.instance.public_dns_name if self.instance is not None else ''
+        return self.instance.public_dns_name
 
-    def get_instance_status(self, instance_id):
-        _instance = self.get_instance(instance_id)
-        return _instance.state if _instance is not None else None
+    def get_instance_status(self):
+        return self.instance.status
 
     def provision(self):
         _reservations = None
@@ -74,8 +71,8 @@ class Provider(object):
                                                           key_name=self.key_name.name,
                                                           instance_type='t1.micro')
         if(_reservations and (len(_reservations.instances) == 1)):
-            self.instance = _reservations.instances.pop()
-            self.instance_id = self.instance.id
+            self._instance = _reservations.instances.pop()
+            self.instance_id = self._instance.id
         else:
             sys.stderr.write("Some parameters are not correctly set, "
                              "please check your json config file or "
