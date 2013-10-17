@@ -13,6 +13,7 @@ class Fabricant(Task):
             raise Exception("SSH key path does not exists: {0}".format(key_filename))
         else:
             self.key_filename = key_filename
+        self.debug = False
 
         env.hosts = [ self.host ]
         env.user = 'ubuntu'
@@ -32,17 +33,21 @@ class Fabricant(Task):
             d_val = "Unsupported"
         return d_val
 
-    def remote_dir_copy(self, source_dir, print_output=True):
+    def remote_dir_copy(self, local_dir, remote_dir=None, print_output=True):
         _dpath = None
-        _rout = run("mktemp -d")
+
+        if remote_dir is None:
+            _rout = run("mktemp -d")
+        else:
+            _rout = run("mkdir -p {0}".format(remote_dir))
     
         if _rout.failed and print_output:
-            sys.stderr.write("Failed to create remote tmp directory") 
-        elif not os.path.exists(source_dir):
-            sys.stderr.write("Source directory {0} does not exists".format(source_dir))
+            sys.stderr.write("Failed to create remote directory") 
+        elif not os.path.exists(local_dir):
+            sys.stderr.write("Source directory {0} does not exists".format(local_dir))
         else:
-            _dpath = _rout.stdout
-            put(source_dir, _dpath)
+            _dpath = _rout.stdout if remote_dir is None else remote_dir
+            put(local_dir, _dpath)
         return _dpath
 
     def stage_puppet(self, puppet_dir, manifest_file="init.pp", print_output=True):
@@ -57,14 +62,14 @@ class Fabricant(Task):
     def remote_config_get(self, remote_file, local_file, print_output=True):
         _rsize = 0
         _fpath = None
-        _rout = sudo("mktemp XXXXXXXX.tgz")
-        _fout = sudo("cat {0}".format(remote_file), quiet=True)
-        if ((_rout.failed or _fout.failed) and print_output):
+        _fout = run("mktemp XXXXXXXX.tgz")
+        _dout = sudo("cat {0}".format(remote_file), quiet=True)
+        if ((_dout.failed or _fout.failed) and print_output):
             sys.stderr.write("Failed to create temp file for remote copy")
         else:
-            _fpath = _rout.stdout
-            _rdata = _fout.stdout
-            fabfiles.append(path=_fpath, text=_rdata, use_sude=True)
+            _fpath = _fout.stdout
+            _rdata = _dout.stdout
+            fabfiles.append(path=_fpath, text=_rdata, use_sudo=True)
             get(_fpath, local_file)
             sudo('rm -rf {0}'.format(_fpath))
             _rsize = len(_rdata)
