@@ -42,9 +42,9 @@ class Fabricant(Task):
             _rout = run("mkdir -p {0}".format(remote_dir))
     
         if _rout.failed and print_output:
-            sys.stderr.write("Failed to create remote directory") 
+            sys.stderr.write("Failed to create remote directory\n") 
         elif not os.path.exists(local_dir):
-            sys.stderr.write("Source directory {0} does not exists".format(local_dir))
+            sys.stderr.write("Source directory {0} does not exists\n".format(local_dir))
         else:
             _dpath = _rout.stdout if remote_dir is None else remote_dir
             put(local_dir, _dpath)
@@ -57,7 +57,7 @@ class Fabricant(Task):
             sudo("apt-get -y install puppet")
             sudo("puppet apply --modulepath={0}/puppet/modules/ {0}/puppet/manifests/{1}".format(puppet_dir, manifest_file))
         elif print_output:
-            sys.stderr.write("Distro {0} is not yet supported".format(_distro))
+            sys.stderr.write("Distro {0} is not yet supported\n".format(_distro))
         
     def remote_config_get(self, remote_file, local_file, print_output=True):
         _rsize = 0
@@ -65,7 +65,7 @@ class Fabricant(Task):
         _fout = run("mktemp XXXXXXXX.tgz")
         _dout = sudo("cat {0}".format(remote_file), quiet=True)
         if ((_dout.failed or _fout.failed) and print_output):
-            sys.stderr.write("Failed to create temp file for remote copy")
+            sys.stderr.write("Failed to create temp file for remote copy\n")
         else:
             _fpath = _fout.stdout
             _rdata = _dout.stdout
@@ -82,4 +82,4 @@ class Fabricant(Task):
             self.stage_puppet(_puppet_conf_dir)
             r = self.remote_config_get("/etc/openvpn/ovpn/download-configs/clientlol.tgz", "/tmp/clientlol.tgz")
         else:
-            sys.stderr.write("Could not push puppet configs on remote host")
+            sys.stderr.write("Could not push puppet configs on remote host\n")

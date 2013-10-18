@@ -1,4 +1,5 @@
 import sys
+import time
 from boto import exception as cloudexception
 from fabric.api import execute as fabric_run
 from vpynup.provider import Provider
@@ -21,11 +22,14 @@ class VpnBootstrap(object):
             sys.exit(400)
 
     def start(self):
-  #      prov = self.provider.provision()
-        hostname = "ec2-107-21-155-136.compute-1.amazonaws.com"
-        print(self.provider.get_hostname())
-        print(self.key_filename)
-        self.fabricant = Fabricant(host=hostname, key_filename=self.key_filename)
+        prov = self.provider.provision()
+       
+        _istatus = 'pending'
+        while(_istatus != 'running'):
+            _istatus = self.provider.instance.state
+            sys.stdout.write("Wait until instance is running. Status is: {0}".format(_istatus))
+            time.sleep(5)
+        self.fabricant = Fabricant(host=self.provider.get_hostname(), key_filename=self.key_filename)
         fabric_run(self.fabricant)
 
     def stop(self):
