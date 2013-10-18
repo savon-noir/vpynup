@@ -76,7 +76,7 @@ class Provider(object):
         else:
             sys.stderr.write("Some parameters are not correctly set, "
                              "please check your json config file or "
-                             "instance could not be started")
+                             "instance could not be started\n")
         return _reservations
 
     def unprovision(self):
@@ -84,5 +84,5 @@ class Provider(object):
             _reservations =self.connection.terminate_instances(instance_ids=[self.instance_id])
         else:
             sys.stderr.write("Instance for VPN does not exists. "
-                             "Please manually check if it is still running")
+                             "Please manually check if it is still running\n")
         return _reservations
