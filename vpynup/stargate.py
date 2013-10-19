@@ -3,6 +3,7 @@ import sys
 import os
 import time
 import json
+from fabric.api import execute as fabric_run
 from vpynup import provider
 from vpynup import fabricant
 
@@ -33,7 +34,7 @@ class StarGate(object):
         else:
             sys.stderr.write("No config file provided or the file "
                              "could not be found\n")
-    
+
         if self.__validate_config(dict_config):
             self.auth_params = dict_config['provider']['auth']
             self.instance_params = dict_config['provider']['instance']
@@ -64,19 +65,19 @@ class StarGate(object):
         rval = True
         _cwd = os.getcwd()
 
-        _sdict = ({ "provider":
-                    { "name": "aws",
-                      "auth": {
-                          "aws_access_key_id": "",
-                          "aws_secret_access_key": ""
-                      },
-                      "instance": {
-                        "image_id": "ami-c30360aa",
-                        "key_name": "",
-                        "key_path": ""
-                      }
-                    } 
-                 })
+        _sdict = ({"provider": {
+                       "name": "aws",
+                       "auth": {
+                           "aws_access_key_id": "",
+                           "aws_secret_access_key": ""
+                       },
+                       "instance": {
+                           "image_id": "ami-c30360aa",
+                           "key_name": "",
+                           "key_path": ""
+                       }
+                     }
+                  })
 
         _aws_access_key_id = raw_input('enter/copy your amazon access key id: ')
         _aws_secret_access_key = raw_input('enter/copy your amazon secret access id: ')
@@ -102,7 +103,9 @@ class StarGate(object):
 
     def up(self):
         _r = self.start()
-        self.provision() if _r is not None
+        if _r is not None:
+            print self.gate_hostname()
+            self.provision()
 
         return _r
 
@@ -115,12 +118,12 @@ class StarGate(object):
                 _istatus = self.gate_status()
                 sys.stdout.write("Wait until instance is running. Status is: {0}\n".format(_istatus))
                 time.sleep(5)
+            self.instance = _instance
         return _instance
 
 
     def provision(self):
-        fabricant.provision()
-#        self.fabricant = Fabricant(host=self.provider.get_hostname(), key_filename=self.key_filename)
+        fabric_run(fabricant.provision(self.gate_hostname(), self.instance_params['key_path']))
 
     def stop(self):
         provider.terminate_instance(self.conn, self.instance.id)
@@ -137,4 +140,4 @@ class StarGate(object):
         return self.instance.public_dns_name
 
     def save(self):
-        raise Exception NotImplementedError
+        raise NotImplementedError
