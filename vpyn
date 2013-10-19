@@ -8,9 +8,13 @@ from vpynup import stargate
 
 
 def main(argv):
+    _config_file = None
     optdict = check_options(argv)
 
-    vpnup = stargate.StarGate(json_obj)
+    if 'config_file' in optdict:
+        _config_file = optdict['config_file']
+
+    vpnup = stargate.StarGate(_config_file)
 
     try:
         reqaction = optdict['action']
@@ -38,7 +42,7 @@ def config_path_check(config_path=None):
 
 def check_options(argv):
     optdict = None
-    vpin_actions = [ 'init', 'up', 'provision', 'halt', 'ssh' ]
+    vpin_actions = ['init', 'up', 'provision', 'halt', 'ssh']
 
     parser = optparse.OptionParser()
     parser.add_option('--config', action="store", dest="config_file")
@@ -64,12 +68,13 @@ def check_options(argv):
 
     return optdict
 
+
 def usage():
-    sys.stderr.write("usage: vpnup.py [--config <config_name.json>] <action>\n\n")
+    sys.stderr.write("usage: vpyn [--config <config_name.json>] <action>\n\n")
     sys.stderr.write("actions are:\n")
     sys.stderr.write("\tinit - create environment in local directory\n")
     sys.stderr.write("\tup - to deploy and provision a vm in the cloud\n")
-    sys.stderr.write("\tprovision - provision an already deployed vm in the cloud\n")
+    sys.stderr.write("\tprovision - provision a deployed vm in the cloud\n")
     sys.stderr.write("\tssh - ssh to the deployed vm instance\n")
     sys.stderr.write("\thalt - halt the deployed vm instance\n")
 
