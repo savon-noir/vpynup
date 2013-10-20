@@ -1,5 +1,5 @@
-VPYNUP 
-======
+VPyN-UP
+========
 
 Use case
 --------
@@ -21,6 +21,5 @@ Dependencies
 ------------
 
 - Boto
-- fabtools, with following dependencies: fabric, paramiko, pycrypto, ecdsa)
+- fabric
 - python dev headers, for compiling pycrypto
-- git, to fetch some puppet modules

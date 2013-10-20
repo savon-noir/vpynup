@@ -1,0 +1,4 @@
+- sys.write not flushed for writes
+- manage security policies
+- manage keys
+- review from OO => "functional" programming

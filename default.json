@@ -1,9 +1,14 @@
 {
     "provider": {
           "name": "aws",
-          "parameters": {
+          "auth": {
               "aws_access_key_id": "",
               "aws_secret_access_key": ""
+          },
+          "instance": {
+              "image_id": "ami-c30360aa",
+              "key_name": "my-aws-key",
+              "key_path": "/home/vagrant/vpynup/my-aws-key.pem"
           }
     }
 }
