@@ -39,12 +39,12 @@ def start_instance(conn, instance_params):
 
 
 def terminate_instance(conn, instance_id):
-    _instance = None
-    _reservations = conn.terminate_instances(instance_ids=[instance_id])
+    rval = False
+    _instances_terminated = conn.terminate_instances(instance_ids=[instance_id])
 
-    if(_reservations and (len(_reservations.instances) == 1)):
-        _instance = _reservations.instances.pop()
+    if(_instances_terminated and (len(_instances_terminated) == 1)):
+        rval = True
     else:
         sys.stderr.write("Stopping the instance failed: "
                          "check your aws management console\n")
-    return _instance
+    return rval

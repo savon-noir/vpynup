@@ -1,5 +1,6 @@
 *.pem
 private.json
+default.json
 *.py[cod]
 *.swp
 *~

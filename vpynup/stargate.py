@@ -23,7 +23,7 @@ def _load_config(config_path=None):
         _config_file = config_path
 
     if not os.path.exists(_config_file):
-        sys.stderr.write("config file {0} does not exists. Run vpinup init.")
+        sys.stderr.write("config file {0} does not exists. Run vpinup init.\n")
         sys.exit(1)
 
     try:
@@ -96,12 +96,11 @@ def init():
 def up():
     rval = start()
     if rval:
-        print gate_hostname()
         rval = provision()
         if not rval:
-            sys.stderr.write("Failed to provision the vm on the provider")
+            sys.stderr.write("Failed to provision the vm on the provider\n")
     else:
-        sys.stderr.write("Failed to stage the vm on the provider")
+        sys.stderr.write("Failed to stage the vm on the provider\n")
 
     return rval
 
@@ -132,29 +131,45 @@ def start(wait=True):
 
 
 def provision():
-    _hostname = 'ec2-50-17-108-69.compute-1.amazonaws.com'
-    _sshkeys = '/home/vagrant/vpynup/my-aws-key.pem'
-    _user = 'ubuntu'
-    fabric_run(fabricant.provision, _hostname, _user, _sshkeys)
+    _config_dict = _load_config()
+    _instance_params = _config_dict['provider']['instance']
 
-def stop():
-    _instance = None
+    _hostname = gate_hostname()
+    _sshkeys = _instance_params['key_path']
+    if 'user' not in _instance_params:
+        _user = 'ubuntu'
+    else:
+        _user = _instance_params['user']
+
+    fabric_run(fabricant.provision, _hostname, _user, _sshkeys)
+    rval = True
+
+def terminate():
+    rval = False
     _config_dict = _load_config(_default_config_path())
     _auth_params = _config_dict['provider']['auth']
 
+    _instance = get_instance()
     conn = provider.cloud_connect(**_auth_params)
     if conn is None:
         conn = provider.cloud_connect(**_auth_params)
     if conn and _instance is not None:
-        provider.terminate_instance(conn, _instance.id)
+        rval = provider.terminate_instance(conn, _instance.id)
+        sys.stdout.write("instance destroyed successfully\n")
+    return rval
 
 
-def get_instance(self, instance_id):
-    _instance = None
+def get_instance(instance_id=None):
+    instance = None
+    _instance_id = instance_id
     _config_dict = _load_config(_default_config_path())
     _auth_params = _config_dict['provider']['auth']
+
+    if _instance_id is None and 'instance_id' in _config_dict['provider']['instance']:
+        _instance_id = _config_dict['provider']['instance']['instance_id']
+
     conn = provider.cloud_connect(**_auth_params)
-    _reservations = conn.get_all_instances(instance_ids=[instance_id])
+    _reservations = conn.get_all_instances(instance_ids=[_instance_id])
 
     if _reservations is not None and len(_reservations[0].instances):
         _instance = _reservations[0].instances.pop()
@@ -181,7 +196,7 @@ def status(instance=None):
     return rval
 
 
-def gate_hostname(instance):
+def gate_hostname(instance=None):
     rval = None
     _instance = instance
 
@@ -206,9 +221,9 @@ def save(instance):
 
     if instance and jdict:
         jdict['provider']['instance']['instance_id'] = instance.id
-        jdict['provider']['instance']['instance_status'] = instance.status
+        jdict['provider']['instance']['instance_status'] = instance.state
 
         with open(_default_config_path(), "w") as jfd:
-            json.dump(jdict, jfd)
+            json.dump(jdict, jfd, indent=4)
     else:
-        sys.stderr.write("Session could not be save")
+        sys.stderr.write("Session could not be save\n")
