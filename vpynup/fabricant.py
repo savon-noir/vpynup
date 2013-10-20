@@ -56,33 +56,31 @@ def stage_puppet(puppet_dir, manifest_file="init.pp", print_output=True):
 
 @task
 def remote_config_get(remote_file, local_file, print_output=True):
-    _rsize = 0
+    rval = True
     _fpath = None
-    _fout = run("mktemp XXXXXXXX.tgz")
-    _dout = sudo("cat {0}".format(remote_file), quiet=True)
-    if ((_dout.failed or _fout.failed) and print_output):
+    _fout = run("mktemp /tmp/XXXXXXXX.tgz")
+    if (_fout.failed and print_output):
         sys.stderr.write("Failed to create temp file for remote copy\n")
+        rval = False
     else:
         _fpath = _fout.stdout
-        _rdata = _dout.stdout
-        fabfiles.append(path=_fpath, text=_rdata, use_sudo=True)
+        _dout = sudo("cp {0} {1}".format(remote_file, _fpath))
         get(_fpath, local_file)
         sudo('rm -rf {0}'.format(_fpath))
-        _rsize = len(_rdata)
-    return _rsize
+    return rval
 
 
 @task
-def provision(target_ip, target_port=22, sshkey_path=None):
-    r = 0
-    env['host_string'] = "{0}:{1}".format(target_ip, target_port)
+def provision(target_ip, user='ubuntu', sshkey_path=None, target_port=22):
+    r = True
+    env['host_string'] = "{0}@{1}:{2}".format(user, target_ip, target_port)
     env['key_filename'] = sshkey_path
 
     _mods_dir = "/vagrant/puppet/"
     _puppet_conf_dir = remote_dir_copy(_mods_dir)
     if _puppet_conf_dir is not None:
         stage_puppet(_puppet_conf_dir)
-        r = remote_config_get("/etc/openvpn/ovpn/download-configs/client1.tgz",
+        r = remote_config_get("/etc/openvpn/ovpn/download-configs/client1.tar.gz",
                               "/tmp/clientlol.tgz")
     else:
         sys.stderr.write("Could not push puppet configs on remote host\n")

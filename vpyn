@@ -19,11 +19,14 @@ def main(argv):
     if reqaction == 'init':
         stargate.init()
     elif reqaction == 'up':
-        starget.up()
+        stargate.up()
     elif reqaction == 'provision':
-        starget.provision()
+        stargate.provision()
+    elif reqaction == 'status':
+        istatus = stargate.status()
+        print("instance status: {0}".format(istatus))
     elif reqaction == 'halt':
-        starget.terminate()
+        stargate.terminate()
 #    except Exception as e:
 #        sys.stderr.write("Unhandled exception: state saved")
 #        sys.stderr.write("Exception message: {0}".format(e.message))
@@ -44,7 +47,7 @@ def config_path_check(config_path=None):
 
 def check_options(argv):
     optdict = {}
-    vpin_actions = ['init', 'up', 'provision', 'halt', 'ssh']
+    vpin_actions = ['init', 'up', 'provision', 'halt', 'ssh', 'status']
 
     parser = optparse.OptionParser()
     parser.add_option('--config', action="store", dest="config_file")
