@@ -2,8 +2,8 @@
     "provider": {
           "name": "aws",
           "auth": {
-              "aws_access_key_id": "AKIAJJMV5LM5WPZLLU3A",
-              "aws_secret_access_key": "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"
+              "aws_access_key_id": "",
+              "aws_secret_access_key": ""
           },
           "instance": {
               "image_id": "ami-c30360aa",
