@@ -70,10 +70,11 @@ def init():
         _sdict['provider']['instance']['key_path'] = _aws_sshkey_path
 
         try:
-            with open("{0}/{1}".format(_cwd), "vpinup.json") as jfd:
+            _fname = "{0}/{1}".format(_cwd, "vpinup.json")
+            with open(_fname, 'w') as jfd:
                 json.dump(_sdict, jfd, indent=4)
         except IOError as e:
-            sys.stderr.write("File creation failed: {0}".format(e.message))
+            sys.stderr.write("File {0} creation failed: {1}".format(_fname, e.strerror))
             rval = False
 
 #            _env_dir = "{0}/{1}".format(_cwd, ".vpinup/")
@@ -97,6 +98,7 @@ def up():
     return _r
 
 def start(wait=True):
+    _cwd = os.getcwd()
     _config_file = "{0}/{1}".format(_cwd), "vpinup.json"
     _configdict = _load_config(_config_file)
     _auth_params = _config_dict['provider']['auth']
@@ -145,6 +147,7 @@ def gate_hostname(instance):
     return instance.public_dns_name
 
 def save(instance):
+    _cwd = os.getcwd()
     _config_file = "{0}/{1}".format(_cwd), "vpinup.json"
     if os.path.exists(_config_file):
         with open(_config_file) as jfd:

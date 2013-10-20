@@ -14,21 +14,23 @@ def main(argv):
     if 'config_file' in optdict:
         _config_file = optdict['config_file']
 
-    vpnup = stargate.StarGate(_config_file)
-
-    try:
-        reqaction = optdict['action']
-        if reqaction == 'init':
-            vpnup.init()
-        elif reqaction == 'up':
-            vpnup.start()
-    except Exception as e:
-        sys.stderr.write("Unhandled exception: state saved")
-        sys.stderr.write("Exception message: {0}".format(e.message))
+#    try:
+    reqaction = optdict['action']
+    if reqaction == 'init':
+        stargate.init()
+    elif reqaction == 'up':
+        starget.up()
+    elif reqaction == 'provision':
+        starget.provision()
+    elif reqaction == 'halt':
+        starget.terminate()
+#    except Exception as e:
+#        sys.stderr.write("Unhandled exception: state saved")
+#        sys.stderr.write("Exception message: {0}".format(e.message))
 
 
 def config_path_check(config_path=None):
-    default_config = "default.json"
+    default_config = "vpinup.json"
     config_file = None
 
     if config_path is not None and os.path.exists(config_path):
