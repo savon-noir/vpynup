@@ -19,7 +19,7 @@ def main(argv):
     try:
         reqaction = optdict['action']
         if reqaction == 'init':
-            vpnup.init_config()
+            vpnup.init()
         elif reqaction == 'up':
             vpnup.start()
     except Exception as e:
@@ -41,12 +41,12 @@ def config_path_check(config_path=None):
 
 
 def check_options(argv):
-    optdict = None
+    optdict = {}
     vpin_actions = ['init', 'up', 'provision', 'halt', 'ssh']
 
     parser = optparse.OptionParser()
     parser.add_option('--config', action="store", dest="config_file")
-    options, args = parser.parse_args()
+    (options, args) = parser.parse_args(argv)
 
     if len(args) != 1 or args[0] not in vpin_actions:
         sys.stderr.write("No proper actions submited\n")
@@ -55,8 +55,8 @@ def check_options(argv):
     else:
         optdict['action'] = args[0]
 
-    if 'config_file' in options:
-        optdict['config_file'] = options['config_file']
+    if options.config_file is not None:
+        optdict['config_file'] = options.config_file
     else:
         optdict['config_file'] = config_path_check()
 
