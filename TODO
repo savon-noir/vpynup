@@ -1,4 +1,7 @@
 - sys.write not flushed for writes
-- manage security policies
+- manage security groups
 - manage keys
 - review from OO => "functional" programming
+- add dry_run options for tox tests
+- add wait check bool for stop and terminate 
+- fix too early connect: fabric.exceptions.NetworkError: Timed out trying

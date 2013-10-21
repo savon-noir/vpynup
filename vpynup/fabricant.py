@@ -44,14 +44,22 @@ def remote_dir_copy(local_dir, remote_dir=None, print_output=True):
 
 @task
 def stage_puppet(puppet_dir, manifest_file="init.pp", print_output=True):
+    rval = True
     _distro = get_distro()
     if _distro == "Debian":
         sudo("apt-get -y update")
-        sudo("apt-get -y install puppet")
-        sudo("puppet apply --modulepath={0}/puppet/modules/ "
-             "{0}/puppet/manifests/{1}".format(puppet_dir, manifest_file))
+        rcode = sudo("apt-get -y install puppet")
+        if rcode.return_code == 0:
+            rcode = sudo("puppet apply --modulepath={0}/puppet/modules/ "
+                         "{0}/puppet/manifests/{1}".format(puppet_dir, manifest_file))
+        if rcode.return_code != 0:
+            sys.stderr.write("Failed to stage puppet config: re-run provision\n")
+            rval = False
+
     elif print_output:
         sys.stderr.write("Distro {0} is not yet supported\n".format(_distro))
+        rval = False
+    return rval
 
 
 @task
@@ -79,10 +87,14 @@ def provision(target_ip, user='ubuntu', sshkey_path=None, target_port=22):
     _mods_dir = "/vagrant/puppet/"
     _puppet_conf_dir = remote_dir_copy(_mods_dir)
     if _puppet_conf_dir is not None:
-        stage_puppet(_puppet_conf_dir)
-        r = remote_config_get("/etc/openvpn/ovpn/download-configs/client1.tar.gz",
-                              "/tmp/clientlol.tgz")
+        r = stage_puppet(_puppet_conf_dir)
+        if r is True:
+            r = remote_config_get("/etc/openvpn/ovpn/download-configs/client1.tar.gz",
+                                  "/tmp/clientlol.tgz")
+            if r is False:
+                sys.stderr.write("Failed to get config: check remote host: {0}".format(target_ip))
     else:
         sys.stderr.write("Could not push puppet configs on remote host\n")
+        r = False
 
     return r

@@ -28,9 +28,12 @@ def main(argv):
     elif reqaction == 'hostname':
         ihostname = stargate.gate_hostname()
         print("instance hostname: {0}".format(ihostname))
- 
+    elif reqaction == 'reboot':
+        stargate.reboot()
     elif reqaction == 'destroy':
         stargate.terminate()
+    elif reqaction == 'halt':
+        stargate.stop()
 #    except Exception as e:
 #        sys.stderr.write("Unhandled exception: state saved")
 #        sys.stderr.write("Exception message: {0}".format(e.message))
@@ -51,7 +54,7 @@ def config_path_check(config_path=None):
 
 def check_options(argv):
     optdict = {}
-    vpin_actions = ['init', 'up', 'provision', 'halt', 'ssh', 'status', 'destroy', 'hostname']
+    vpin_actions = ['init', 'up', 'provision', 'halt', 'ssh', 'status', 'destroy', 'hostname', 'reboot']
 
     parser = optparse.OptionParser()
     parser.add_option('--config', action="store", dest="config_file")

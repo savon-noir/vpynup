@@ -28,7 +28,7 @@ def _load_config(config_path=None):
 
     try:
         with open(_config_file) as jsonfd:
-            dict_config = json.load(jsonfd)
+           dict_config = json.load(jsonfd)
     except Exception as e:
         sys.stderr.write("json config loading failed: {0}\n".format(e.message))
         sys.exit(1)
@@ -95,8 +95,13 @@ def init():
 
 def up():
     rval = start()
+    _provisioned = not_provisioned()
     if rval:
-        rval = provision()
+        if not _provisioned:
+            rval = provision()
+        else:
+            sys.stdout.write("Remote host already provisioned. run provision to force\n")
+
         if not rval:
             sys.stderr.write("Failed to provision the vm on the provider\n")
     else:
@@ -108,15 +113,21 @@ def up():
 def start(wait=True):
     rval = False
     _instance = None
+    _instance_id = None
 
     _config_dict = _load_config()
     _auth_params = _config_dict['provider']['auth']
     _instance_params = _config_dict['provider']['instance']
 
+    if 'instance_id' in _config_dict['provider']['instance']:
+        _instance_id = _config_dict['provider']['instance']['instance_id']
+
     conn = provider.cloud_connect(**_auth_params)
 
-    if conn is not None:
-        _instance = provider.start_instance(conn, _instance_params)
+    if conn is not None and _instance_id is None:
+        _instance = provider.create_instance(conn, _instance_params)
+    elif conn is not None and _instance_id is not None:
+        _instance = provider.start_instance(conn, _instance_id)
 
     if _instance is not None:
         _istatus = 'pending'
@@ -135,14 +146,26 @@ def provision():
     _instance_params = _config_dict['provider']['instance']
 
     _hostname = gate_hostname()
+    _i = 0
+    while(_i < 4 and _hostname == ''):
+        _hostname = gate_hostname()
+        _i = _i + 1
+        time.sleep(5)
     _sshkeys = _instance_params['key_path']
     if 'user' not in _instance_params:
         _user = 'ubuntu'
     else:
         _user = _instance_params['user']
+    time.sleep(10)
+    retdict = fabric_run(fabricant.provision, _hostname, _user, _sshkeys)
 
-    fabric_run(fabricant.provision, _hostname, _user, _sshkeys)
-    rval = True
+    if True in retdict.values():
+        save(None, True)
+        rval = True
+    else:
+        rval = False
+
+    return rval
 
 def terminate():
     rval = False
@@ -157,6 +180,23 @@ def terminate():
         rval = provider.terminate_instance(conn, _instance.id)
         sys.stdout.write("instance destroyed successfully\n")
     return rval
+
+def stop():
+    rval = False
+    _config_dict = _load_config(_default_config_path())
+    _auth_params = _config_dict['provider']['auth']
+
+    _instance = get_instance()
+    conn = provider.cloud_connect(**_auth_params)
+    if conn is None:
+        conn = provider.cloud_connect(**_auth_params)
+    if conn and _instance is not None:
+        rval = provider.stop_instance(conn, _instance.id)
+        sys.stdout.write("instance halted successfully\n")
+    return rval
+
+def reboot():
+    sys.stderr.write("not yet :p\n")
 
 
 def get_instance(instance_id=None):
@@ -216,14 +256,26 @@ def gate_hostname(instance=None):
     return rval
 
 
-def save(instance):
+def save(instance=None, provisioned=None):
     jdict = _load_config()
 
-    if instance and jdict:
+    if instance is not None and jdict:
         jdict['provider']['instance']['instance_id'] = instance.id
         jdict['provider']['instance']['instance_status'] = instance.state
 
         with open(_default_config_path(), "w") as jfd:
             json.dump(jdict, jfd, indent=4)
+    elif jdict and provisioned is not None:
+        jdict['provider']['instance']['provisioned'] = str(provisioned)
+        with open(_default_config_path(), "w") as jfd:
+            json.dump(jdict, jfd, indent=4)
     else:
         sys.stderr.write("Session could not be save\n")
+
+def not_provisioned():
+    rval = False
+
+    jdict = _load_config()
+    if jdict and 'provisioned' in jdict['provider']['instance']:
+        rval = bool(jdict['provider']['instance']['provisioned'])
+    return rval

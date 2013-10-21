@@ -19,14 +19,14 @@ def cloud_connect(**kwargs):
     return conn
 
 
-def start_instance(conn, instance_params):
+def create_instance(conn, instance_params):
     _instance = None
     _image_id = instance_params['image_id']
     _key_name = instance_params['key_name']
 
     _reservations = conn.run_instances(image_id=_image_id,
                                        key_name=_key_name,
-                                       security_groups=['default'],
+                                       security_groups=['sgvpn'],
                                        instance_type='t1.micro')
 
     if(_reservations and (len(_reservations.instances) == 1)):
@@ -36,6 +36,48 @@ def start_instance(conn, instance_params):
                          "please check your json config file or "
                          "instance could not be started\n")
     return _instance
+
+
+def start_instance(conn, instance_id=None):
+    _instance = None
+    if instance_id:
+        ilist = conn.start_instances(instance_ids=[instance_id])
+    else:
+        sys.stderr.write("Cannot sart instance: no valid id provided")
+
+    if len(ilist) != 1:
+        sys.stderr.write("Cannot sart instance: no valid id provided")
+    else:
+        _instance = ilist.pop()
+    return _instance
+
+
+def stop_instance(conn, instance_id=None, force=False):
+    rval = False
+    if instance_id:
+        ilist = conn.stop_instances(instance_ids=[instance_id], force=force)
+    else:
+        sys.stderr.write("Cannot stop instance: no valid id provided")
+
+    if len(ilist) != 1:
+        sys.stderr.write("Cannot stop instance: no valid id provided")
+    else:
+        rval = True
+    return rval
+
+
+def reboot_instance(conn, instance_id=None, force=False):
+    rval = False
+    if instance_id:
+        ilist = conn.reboot_instances(instance_ids=[instance_id], force=force)
+    else:
+        sys.stderr.write("Cannot reboot instance: no valid id provided")
+
+    if len(ilist) != 1:
+        sys.stderr.write("Cannot reboot instance: no valid id provided")
+    else:
+        rval = True
+    return rval
 
 
 def terminate_instance(conn, instance_id):
