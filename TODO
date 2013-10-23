@@ -5,3 +5,10 @@
 - add dry_run options for tox tests
 - add wait check bool for stop and terminate 
 - fix too early connect: fabric.exceptions.NetworkError: Timed out trying
+- on puppet:
+    - add sysctl apply
+    - add iptables apply
+    - puppet module install luxflux/openvpn
+    - puppet module install puppetlabs/firewall
+    - puppet module install thias/sysctl
+- automatic download of configs formated for the specific host for tunnelblick

@@ -22,5 +22,26 @@ openvpn::server { 'ovpn':
   email        => "mini.pelle@gmail.com",
   server       => '10.200.200.0 255.255.255.0',
   proto        => 'tcp',
+  push         => "redirect-gateway",
   local        => ''
+}
+
+resources { "firewall":
+  purge => true
+}
+
+Firewall {
+    before  => Class['my_fw::post'],
+    require => Class['my_fw::pre'],
+}
+
+class { ['my_fw::pre', 'my_fw::post']: }
+
+firewall {'100 snat ovpn traffic':
+    chain    => 'POSTROUTING',
+    jump     => 'MASQUERADE',
+    proto    => 'all',
+    outiface => "eth0",
+    source   => '0.0.0.0/0',
+    table    => 'nat'
 }
