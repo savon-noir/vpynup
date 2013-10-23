@@ -12,3 +12,5 @@
     - puppet module install puppetlabs/firewall
     - puppet module install thias/sysctl
 - automatic download of configs formated for the specific host for tunnelblick
+- in create client config ensure puppet and openvpn modules are installed
+- move waiter in provision to stargate master call
