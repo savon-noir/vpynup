@@ -156,7 +156,7 @@ def provision():
         _user = 'ubuntu'
     else:
         _user = _instance_params['user']
-    time.sleep(10)
+    time.sleep(5)
     retdict = fabric_run(fabricant.provision, _hostname, _user, _sshkeys)
 
     if True in retdict.values():
@@ -166,6 +166,7 @@ def provision():
         rval = False
 
     return rval
+
 
 def terminate():
     rval = False

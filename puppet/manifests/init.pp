@@ -1,6 +1,4 @@
-sysctl::directive {
-  "net.ipv4.ip_forward": value => 1;
-}
+sysctl { "net.ipv4.ip_forward": value => "1" }
 
 group { "puppet":
   ensure => "present",
@@ -8,40 +6,34 @@ group { "puppet":
 
 File { owner => 0, group => 0, mode => 0644 }
 
-openvpn::client { 'client1':
-    server => 'ovpn',
-    proto  => 'tcp',
-    port => '1194'
-}
-
-openvpn::server { 'ovpn':
+openvpn::server { "ovpn":
   country      => "BE",
   province     => "BRU",
   city         => "Brussels",
   organization => "secaas.be",
   email        => "mini.pelle@gmail.com",
-  server       => '10.200.200.0 255.255.255.0',
-  proto        => 'tcp',
+  server       => "10.200.200.0 255.255.255.0",
+  proto        => "tcp",
   push         => "redirect-gateway",
-  local        => ''
+  local        => ""
 }
 
 resources { "firewall":
   purge => true
 }
 
-Firewall {
-    before  => Class['my_fw::post'],
-    require => Class['my_fw::pre'],
+firewall {"100 snat ovpn traffic":
+    chain    => "POSTROUTING",
+    jump     => "MASQUERADE",
+    proto    => "all",
+    outiface => "eth0",
+    source   => "0.0.0.0/0",
+    table    => "nat"
 }
 
-class { ['my_fw::pre', 'my_fw::post']: }
-
-firewall {'100 snat ovpn traffic':
-    chain    => 'POSTROUTING',
-    jump     => 'MASQUERADE',
-    proto    => 'all',
-    outiface => "eth0",
-    source   => '0.0.0.0/0',
-    table    => 'nat'
+openvpn::client { "client1":
+    server   => "ovpn",
+    remote_host => "%(remote_host)s",
+    port => "1194",
+    proto => "tcp"
 }
