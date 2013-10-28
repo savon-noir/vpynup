@@ -1,4 +1,5 @@
 from distutils.core import setup
+from setuptools import setup, find_packages
 
 with open("README.rst") as rfile:
     long_description = rfile.read()
@@ -9,7 +10,14 @@ setup(
     author='Ronald Bister',
     author_email='mini.pelle@gmail.com',
     packages=['vpynup'],
-    url='http://pypi.python.org/pypi/vpynup/',
+    scripts = ["vpyn", ],
+#    package_data = {
+#                        'puppet': ['puppet/manifests/init.pp'],
+#                    },
+    data_files=[('vpynup/puppet', ['vpynup/puppet/manifests/init.pp']),],
+
+    install_requires = ['boto'],
+    url="http://pypi.python.org/pypi/vpynup/",
     license='Creative Common "Attribution" license (CC-BY) v3',
     description=('vpn lolz'),
     long_description=long_description,

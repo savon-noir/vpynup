@@ -1,6 +1,7 @@
 import sys
 import os
 import uuid
+import pkg_resources
 from fabric.api import env, task
 from fabric.operations import run, put, sudo, get
 from fabric.contrib import files as fabfiles
@@ -112,7 +113,11 @@ def remote_config_get(remote_file, local_file, print_output=True):
 @task
 def provision(target_ip, user='ubuntu', sshkey_path=None, target_port=22):
     r = True
-    modules_list = ['luxflux/openvpn', 'puppetlabs/firewall', 'thias/sysctl']
+    modules_list = ['luxflux/openvpn',
+                    'puppetlabs/firewall',
+                    'thias/sysctl',
+                    'puppetlabs/concat']
+
     env['host_string'] = "{0}@{1}:{2}".format(user, target_ip, target_port)
     env['key_filename'] = sshkey_path
 
@@ -128,7 +133,8 @@ def provision(target_ip, user='ubuntu', sshkey_path=None, target_port=22):
 
     if r is True:
         _pcontext={"remote_host": target_ip}
-        _mods_dir = "/vagrant/puppet/"
+        _mods_dir = pkg_resources.resource_filename("vpynup", "puppet")
+        print "DEBUG " + _mods_dir
         _pmanifest = "init.pp"
         _src_file = "{0}/manifests/{1}".format(_mods_dir, _pmanifest)
         _dst_dir = "/tmp/{0}/".format(str(uuid.uuid4()))
@@ -157,7 +163,7 @@ def get_new_config(client_name, outfile=None):
     r = False
     _rcpath = "/etc/openvpn/ovpn/download-configs/{0}.tar.gz".format(client_name)
     if outfile is None:
-        _lcpath = "/vagrant/{0}.tar.gz".format(client_name)
+        _lcpath = "/tmp/{0}.tar.gz".format(client_name)
     else:
         _lcpath = outfile
 
