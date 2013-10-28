@@ -24,6 +24,20 @@ def create_instance(conn, instance_params):
     _image_id = instance_params['image_id']
     _key_name = instance_params['key_name']
 
+    #check scy group
+    rs = conn.get_all_security_groups()
+    exist = False
+    for k in rs:
+        print "%s=%s" % (k, k.name)
+        if k.name == "sgvpn" :
+            exist = True
+    
+    if not exist:
+        sgvpn = conn.create_security_group('sgvpn', 'Our sgvpn access profile')
+        sgvpn.authorize('tcp', 1194, 1194, '0.0.0.0/0')
+        sgvpn.authorize('tcp', 22, 22, '0.0.0.0/0')
+        print sgvpn.rules
+
     _reservations = conn.run_instances(image_id=_image_id,
                                        key_name=_key_name,
                                        security_groups=['sgvpn'],
