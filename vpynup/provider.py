@@ -1,17 +1,23 @@
 import sys
 from boto import ec2 as cloudapi
 from boto import exception as cloudexception
-
+from boto.ec2.regioninfo import RegionInfo
 
 def cloud_connect(**kwargs):
     conn = None
 
     try:
+        if 'region' in kwargs:
+            euca_region = RegionInfo(name=kwargs['region']['name'], endpoint=kwargs['region']['endpoint'])
+            kwargs['region'] = euca_region
+
         if 'aws_access_key_id' in kwargs and 'aws_secret_access_key':
             conn = cloudapi.connection.EC2Connection(**kwargs)
+            print conn.__dict__
         else:
             sys.stderr.write("Failed to connect to cloud provider: "
                              "check credentials\n")
+
     except cloudexception.NoAuthHandlerFound as e:
         sys.stderr.write("Failed to connect to cloud provider: "
                          "{0}\n".format(e.message))

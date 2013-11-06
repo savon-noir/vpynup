@@ -14,7 +14,7 @@ openvpn::server { "ovpn":
   email        => "mini.pelle@gmail.com",
   server       => "10.200.200.0 255.255.255.0",
   proto        => "tcp",
-  push         => "redirect-gateway",
+  push         => ["redirect-gateway"],
   local        => ""
 }
 
