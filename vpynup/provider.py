@@ -1,17 +1,23 @@
 import sys
 from boto import ec2 as cloudapi
 from boto import exception as cloudexception
-
+from boto.ec2.regioninfo import RegionInfo
 
 def cloud_connect(**kwargs):
     conn = None
 
     try:
+        if 'region' in kwargs:
+            euca_region = RegionInfo(name=kwargs['region']['name'], endpoint=kwargs['region']['endpoint'])
+            kwargs['region'] = euca_region
+
         if 'aws_access_key_id' in kwargs and 'aws_secret_access_key':
             conn = cloudapi.connection.EC2Connection(**kwargs)
+            print conn.__dict__
         else:
             sys.stderr.write("Failed to connect to cloud provider: "
                              "check credentials\n")
+
     except cloudexception.NoAuthHandlerFound as e:
         sys.stderr.write("Failed to connect to cloud provider: "
                          "{0}\n".format(e.message))
@@ -23,6 +29,20 @@ def create_instance(conn, instance_params):
     _instance = None
     _image_id = instance_params['image_id']
     _key_name = instance_params['key_name']
+
+    #check scy group
+    rs = conn.get_all_security_groups()
+    exist = False
+    for k in rs:
+        print "%s=%s" % (k, k.name)
+        if k.name == "sgvpn" :
+            exist = True
+    
+    if not exist:
+        sgvpn = conn.create_security_group('sgvpn', 'Our sgvpn access profile')
+        sgvpn.authorize('tcp', 1194, 1194, '0.0.0.0/0')
+        sgvpn.authorize('tcp', 22, 22, '0.0.0.0/0')
+        print sgvpn.rules
 
     _reservations = conn.run_instances(image_id=_image_id,
                                        key_name=_key_name,

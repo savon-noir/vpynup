@@ -69,16 +69,30 @@ def init():
                  }
               })
 
+    _aws_provider = raw_input('enter your provider: aws/euca [aws] ')
+    _aws_provider = _aws_provider or "aws"
     _aws_access_key_id = raw_input('enter/copy your amazon access key id: ')
     _aws_secret_access_key = raw_input('enter/copy your amazon secret access id: ')
     _aws_sshkey_name = raw_input('enter the name of your amazon ssh key: ')
     _aws_sshkey_path = raw_input('enter the path to the corresponding private key (.pem file): ')
+    _aws_sshuser = raw_input('enter the name of your ssh user: []')
 
     if '' not in [_aws_access_key_id, _aws_secret_access_key, _aws_sshkey_name, _aws_sshkey_path]:
         _sdict['provider']['auth']['aws_access_key_id'] = _aws_access_key_id
         _sdict['provider']['auth']['aws_secret_access_key'] = _aws_secret_access_key
         _sdict['provider']['instance']['key_name'] = _aws_sshkey_name
         _sdict['provider']['instance']['key_path'] = _aws_sshkey_path
+   
+    if _aws_provider == "euca":
+        _sdict['provider']['name'] = _aws_provider
+        _sdict['provider']['auth']['port'] = 8773
+        _sdict['provider']['auth']['path'] = "/services/Eucalyptus"
+        _sdict['provider']['auth']['is_secure'] = False
+        _sdict['provider']['auth']['region']={}
+        _sdict['provider']['auth']['region']['name'] = "eucalyptus"
+        _sdict['provider']['auth']['region']['endpoint'] ="eucalyptus.ecc.eucalyptus.com"
+        _sdict['provider']['instance']['user'] = _aws_sshuser or "ec2-user"
+        _sdict['provider']['instance']['image_id'] = "emi-8B443944"
 
         try:
             _fname = _default_config_path()
@@ -147,7 +161,7 @@ def provision():
 
     _hostname = gate_hostname()
     _i = 0
-    while(_i < 4 and _hostname == ''):
+    while(_i < 10 and _hostname == ''):
         _hostname = gate_hostname()
         _i = _i + 1
         time.sleep(5)
